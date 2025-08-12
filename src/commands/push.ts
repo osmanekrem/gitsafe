@@ -1,12 +1,26 @@
 import inquirer from 'inquirer';
 import { getCurrentBranch, getRemoteBehindCount, executeGit } from '../core/git';
 import { exec } from 'child_process';
+import {loadConfig} from "../core/config";
 
 export async function handlePush() {
     try {
+        const config = loadConfig();
+        if (!config) {
+            console.error('❌ Hata: .gitsafe.yml bulunamadı. Lütfen önce `gitsafe init` komutunu çalıştırın.');
+            process.exit(1);
+        }
+
         console.log('🔄 gitsafe push kontrolü başlatılıyor...');
         const currentBranch = await getCurrentBranch();
         console.log(`Mevcut branch: ${currentBranch}`);
+
+
+        if (config.protectedBranches && config.protectedBranches.includes(currentBranch)) {
+            console.error(`\n❌ ENGELENDİ: '${currentBranch}' branch'i korumalıdır!`);
+            console.warn('Bu branch\'e doğrudan push yapamazsınız. Lütfen bir Pull Request (PR) oluşturun.');
+            process.exit(1); // İşlemi sonlandır.
+        }
 
         console.log('Uzak depo ile senkronizasyon kontrol ediliyor...');
         const behindCount = await getRemoteBehindCount(currentBranch);
@@ -48,13 +62,14 @@ export async function handlePush() {
         } else {
             console.log('✅ Lokal branch\'iniz güncel. Güvenli push işlemi gerçekleştiriliyor...');
             const pushArgs = process.argv.slice(3).join(' ');
-            exec(`git push ${pushArgs}`, (err, stdout, stderr) => {
-                if (err) {
-                    console.error(`\n❌ Git Hatası:\n${stderr}`);
-                    return;
-                }
-                console.log(`\n✅ Başarılı:\n${stdout}${stderr}`);
-            });
+
+            try {
+                const stdout = await executeGit(`push ${pushArgs}`);
+                console.log(`\n✅ Başarılı:\n${stdout}`);
+            } catch(pushError) {
+                const gitError = pushError as { stderr?: string };
+                console.error(`\n❌ Git Hatası:\n${gitError.stderr || 'Bilinmeyen bir git hatası.'}`);
+            }
         }
     } catch (error) {
         const gitError = error as { stderr?: string };
