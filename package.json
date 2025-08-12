@@ -1,12 +1,13 @@
 {
   "name": "gitsafe",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A CLI tool to prevent common Git mistakes.",
   "main": "dist/index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "npm run build"
   },
   "bin": {
     "gitsafe": "./dist/index.js"
@@ -14,10 +15,18 @@
   "keywords": [
     "git",
     "cli",
-    "developer-tools"
+    "developer-tools",
+    "husky",
+    "conventional-commits",
+    "safety",
+    "automation"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Osman Ekrem Korkmaz <korkmazosmanekrem@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/osmanekrem/gitsafe.git"
+  },
   "dependencies": {
     "commander": "^11.1.0",
     "inquirer": "^8.2.6",
