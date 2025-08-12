@@ -103,3 +103,13 @@ export async function isCommitPushed(submodulePath: string, commitHash: string):
         return false;
     }
 }
+
+export async function isDetachedHead(): Promise<boolean> {
+    try {
+        await executeGit('symbolic-ref --short HEAD');
+        return false;
+    } catch (e) {
+        const statusOutput = await executeGit('status');
+        return statusOutput.includes('HEAD detached at');
+    }
+}

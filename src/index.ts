@@ -6,6 +6,7 @@ import {handleBranch} from "./commands/branch";
 import {handleClean} from "./commands/clean";
 import {handleSync} from "./commands/sync";
 import {handleValidateCommit} from "./commands/validate-commit";
+import {handleFix} from "./commands/fix";
 
 const program = new Command();
 
@@ -48,5 +49,10 @@ program
     .command('validate-commit <commitMsgFilePath>')
     .description('(Dahili) Bir commit mesajının formatını doğrular. Git hook\'u tarafından kullanılır.')
     .action(handleValidateCommit);
+
+program
+    .command('fix')
+    .description('Yaygın Git sorunlarını otomatik olarak teşhis eder ve interaktif çözüm sunar.')
+    .action(handleFix);
 
 program.parse(process.argv);
