@@ -128,3 +128,12 @@ export async function getChangedFiles(): Promise<string[]> {
         throw e;
     }
 }
+
+export async function hasStagedFiles(): Promise<boolean> {
+    try {
+        await executeGit('diff --cached --quiet');
+        return false;
+    } catch (e) {
+        return true;
+    }
+}

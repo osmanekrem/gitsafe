@@ -1,7 +1,8 @@
 import inquirer from 'inquirer';
 import { loadConfig } from '../core/config';
-import {executeGit, getStagedSubmodules, isCommitPushed} from '../core/git';
+import {executeGit, getStagedSubmodules, hasStagedFiles, isCommitPushed} from '../core/git';
 import path from "path";
+import {handleAdd} from "./add";
 
 async function pushSubmodule(submodulePath: string): Promise<void> {
     const originalDir = process.cwd();
@@ -26,6 +27,30 @@ export async function handleCommit() {
             console.error('❌ Hata: .gitsafe.yml bulunamadı. Lütfen önce `gitsafe init` komutunu çalıştırın.');
             process.exit(1);
         }
+
+        if (!(await hasStagedFiles())) {
+            console.log('ℹ️ Commitlemek için hazırlanmış (staged) hiçbir değişiklik bulunamadı.');
+            const { proceedToAdd } = await inquirer.prompt([
+                {
+                    type: 'confirm',
+                    name: 'proceedToAdd',
+                    message: '`gitsafe add` yardımcısını çalıştırarak şimdi dosya eklemek ister misiniz?',
+                    default: true,
+                },
+            ]);
+
+            if (proceedToAdd) {
+                await handleAdd();
+                if (!(await hasStagedFiles())) {
+                    console.log('Staging area hala boş. Commit işlemi iptal edildi.');
+                    return;
+                }
+            } else {
+                console.log('Commit işlemi iptal edildi.');
+                return;
+            }
+        }
+
         console.log('🔍 Submodule tutarlılığı kontrol ediliyor...');
         const stagedSubmodules = await getStagedSubmodules();
         let submodulesPushed = false;
