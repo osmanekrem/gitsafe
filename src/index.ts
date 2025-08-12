@@ -3,6 +3,7 @@ import {handleInit} from "./commands/init";
 import {handleCommit} from "./commands/commit";
 import {handlePush} from "./commands/push";
 import {handleBranch} from "./commands/branch";
+import {handleClean} from "./commands/clean";
 
 const program = new Command();
 
@@ -30,5 +31,10 @@ program
     .command('branch <name>')
     .description('Yeni bir branch oluştururken isimlendirme standartlarını kontrol eder.')
     .action(handleBranch);
+
+program
+    .command('clean')
+    .description('Ana branch ile birleştirilmiş lokal branch\'leri interaktif olarak temizler.')
+    .action(handleClean);
 
 program.parse(process.argv);

@@ -27,6 +27,12 @@ export async function handleInit() {
             ],
         },
         {
+            type: 'input',
+            name: 'mainBranch',
+            message: 'Projenin ana branch\'inin adı nedir? (örn: main, master, production)',
+            default: 'main',
+        },
+        {
             type: 'confirm',
             name: 'setupProtectedBranches',
             message: 'Doğrudan push\'a karşı korumalı branch\'ler belirlemek ister misiniz?',
@@ -76,6 +82,10 @@ commitMessage:
 # Branch isimlendirme kuralları
 branchNaming:
   rule: ${answers.branchNaming}
+  
+# gitsafe clean gibi komutlar için projenin ana branch'i
+mainBranch: ${answers.mainBranch}
+
 ${protectedBranchesYaml.trim()}
 `;
 

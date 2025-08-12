@@ -10,6 +10,7 @@ export interface GitSafeConfig {
         rule: 'strict' | 'warn' | 'off';
     };
     protectedBranches: string[];
+    mainBranch: string;
 }
 
 export function loadConfig(): GitSafeConfig | null {
