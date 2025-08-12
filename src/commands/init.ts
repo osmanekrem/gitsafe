@@ -51,6 +51,32 @@ export async function handleInit() {
             message: 'Husky ile Git hook\'ları otomatik olarak kurulsun mu? (Tavsiye Edilir)',
             default: true,
         },
+        {
+            type: 'checkbox',
+            name: 'hooksToInstall',
+            message: 'Hangi gitsafe otomasyonlarını (Git Hooks) aktive etmek istersiniz?',
+            when: (answers) => answers.setupHusky,
+            choices: [
+                {
+                    name: 'Commit Mesajı Formatını Otomatik Denetle (commit-msg)',
+                    value: 'commit-msg',
+                    short: 'Commit Mesajı Denetimi'
+                },
+                {
+                    name: 'Kodu Push\'lamadan Önce Güvenlik Kontrolü Yap (pre-push)',
+                    value: 'pre-push',
+                    short: 'Push Güvenlik Kontrolü'
+                },
+            ],
+            default: (currentAnswers: any) => {
+                const defaults = [];
+                if (currentAnswers.commitMessage === 'conventional') {
+                    defaults.push('commit-msg');
+                }
+                defaults.push('pre-push');
+                return defaults;
+            }
+        }
     ]);
 
     let protectedBranchesYaml = `
@@ -99,40 +125,29 @@ ${protectedBranchesYaml.trim()}
         console.error('\n❌ Hata: Yapılandırma dosyası oluşturulamadı.', error);
     }
 
-    if (answers.setupHusky) {
+    if (answers.setupHusky && answers.hooksToInstall && answers.hooksToInstall.length > 0) {
         try {
-            console.log('\n🔧 Husky ve Git hook\'ları ayarlanıyor (Güncel Yöntem)...');
+            console.log('\n🔧 Husky ve seçilen Git hook\'ları ayarlanıyor...');
 
-            // package.json'a husky'yi ekle ve husky'nin package.json'da bir script oluşturmasını sağla
             await runCommand('npm install husky --save-dev');
             await runCommand('npm pkg set scripts.prepare="husky install"');
-            await runCommand('npm run prepare'); // `prepare` scriptini çalıştırarak `.husky` klasörünü oluştur.
+            await runCommand('npm run prepare');
 
-            // --- pre-push hook'unu doğrudan oluştur ---
-            const prePushHookPath = path.join(process.cwd(), '.husky', 'pre-push');
-            const prePushScriptContent = `#!/bin/sh
+            if (answers.hooksToInstall.includes('pre-push')) {
+                const prePushHookPath = path.join(process.cwd(), '.husky', 'pre-push');
+                const prePushScriptContent = `#!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
-
-# 'git push' komutu çalıştırıldığında, gitsafe'in push kontrolleri devreye girer.
 npx --no-install gitsafe push
 `;
+                fs.writeFileSync(prePushHookPath, prePushScriptContent);
+                fs.chmodSync(prePushHookPath, '755');
+                console.log(`✅ pre-push hook'u başarıyla oluşturuldu.`);
+            }
 
-            console.log(`\n> .husky/pre-push dosyası oluşturuluyor...`);
-            fs.writeFileSync(prePushHookPath, prePushScriptContent);
-
-            // Dosyaya çalıştırılabilirlik izni ver (+x)
-            fs.chmodSync(prePushHookPath, '755');
-            console.log(`✅ pre-push hook'u başarıyla oluşturuldu.`);
-
-
-            if (answers.commitMessage === 'conventional') {
-                console.log(`\n> .husky/commit-msg dosyası oluşturuluyor...`);
+            if (answers.hooksToInstall.includes('commit-msg')) {
                 const commitMsgHookPath = path.join(process.cwd(), '.husky', 'commit-msg');
                 const commitMsgScriptContent = `#!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
-
-# 'git commit' komutu çalıştırıldığında, mesaj formatını doğrula.
-# '$1' parametresi, commit mesajını içeren dosyanın yoludur.
 npx --no-install gitsafe validate-commit "$1"
 `;
                 fs.writeFileSync(commitMsgHookPath, commitMsgScriptContent);
@@ -140,12 +155,13 @@ npx --no-install gitsafe validate-commit "$1"
                 console.log(`✅ commit-msg hook'u başarıyla oluşturuldu.`);
             }
 
-            console.log('\n✅ Husky hook\'ları başarıyla ayarlandı!');
-            console.log('Artık `git push` komutunu çalıştırdığınızda, gitsafe korumaları otomatik olarak devreye girecek.');
+            console.log('\n✅ Seçilen Husky hook\'ları başarıyla ayarlandı!');
 
         } catch (error) {
             console.error('\n❌ Husky kurulumu sırasında bir hata oluştu.');
             console.error('Lütfen projenizde Node.js ve npm\'in kurulu olduğundan ve package.json dosyanızın olduğundan emin olun.');
         }
+    } else if (answers.setupHusky) {
+        console.log('\nℹ️ Hiçbir hook seçilmediği için Husky kurulumu atlandı.');
     }
 }
