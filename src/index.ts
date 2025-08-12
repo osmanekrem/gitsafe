@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import {handleInit} from "./commands/init";
 import {handleCommit} from "./commands/commit";
+import {handlePush} from "./commands/push";
 
 const program = new Command();
 
@@ -17,5 +18,11 @@ program
     .command('commit')
     .description('Conventional Commits standardına uygun bir commit oluşturmanıza yardımcı olur.')
     .action(handleCommit);
+
+program
+    .command('push')
+    .description('Uzak depo ile senkronizasyon kontrolü yaparak güvenli bir şekilde push yapmanızı sağlar.')
+    .allowUnknownOption()
+    .action(handlePush);
 
 program.parse(process.argv);
