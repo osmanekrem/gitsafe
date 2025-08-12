@@ -5,6 +5,7 @@ import {handlePush} from "./commands/push";
 import {handleBranch} from "./commands/branch";
 import {handleClean} from "./commands/clean";
 import {handleSync} from "./commands/sync";
+import {handleValidateCommit} from "./commands/validate-commit";
 
 const program = new Command();
 
@@ -42,5 +43,10 @@ program
     .command('sync')
     .description('Ana depoyu ve tüm submodule\'leri tek komutla güvenli bir şekilde günceller.')
     .action(handleSync);
+
+program
+    .command('validate-commit <commitMsgFilePath>')
+    .description('(Dahili) Bir commit mesajının formatını doğrular. Git hook\'u tarafından kullanılır.')
+    .action(handleValidateCommit);
 
 program.parse(process.argv);

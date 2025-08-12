@@ -125,18 +125,20 @@ npx --no-install gitsafe push
             console.log(`✅ pre-push hook'u başarıyla oluşturuldu.`);
 
 
-            // --- Gelecek için commit-msg hook örneği ---
-            /*
-            const commitMsgHookPath = path.join(process.cwd(), '.husky', 'commit-msg');
-            const commitMsgScriptContent = `#!/bin/sh
-      . "$(dirname "$0")/_/husky.sh"
+            if (answers.commitMessage === 'conventional') {
+                console.log(`\n> .husky/commit-msg dosyası oluşturuluyor...`);
+                const commitMsgHookPath = path.join(process.cwd(), '.husky', 'commit-msg');
+                const commitMsgScriptContent = `#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-      npx --no-install gitsafe validate-commit --input $1
-      `;
-            fs.writeFileSync(commitMsgHookPath, commitMsgScriptContent);
-            fs.chmodSync(commitMsgHookPath, '755');
-            console.log(`✅ commit-msg hook'u başarıyla oluşturuldu.`);
-            */
+# 'git commit' komutu çalıştırıldığında, mesaj formatını doğrula.
+# '$1' parametresi, commit mesajını içeren dosyanın yoludur.
+npx --no-install gitsafe validate-commit "$1"
+`;
+                fs.writeFileSync(commitMsgHookPath, commitMsgScriptContent);
+                fs.chmodSync(commitMsgHookPath, '755');
+                console.log(`✅ commit-msg hook'u başarıyla oluşturuldu.`);
+            }
 
             console.log('\n✅ Husky hook\'ları başarıyla ayarlandı!');
             console.log('Artık `git push` komutunu çalıştırdığınızda, gitsafe korumaları otomatik olarak devreye girecek.');
