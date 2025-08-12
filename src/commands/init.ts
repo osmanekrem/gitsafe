@@ -129,14 +129,11 @@ ${protectedBranchesYaml.trim()}
         try {
             console.log('\n🔧 Husky ve seçilen Git hook\'ları ayarlanıyor...');
 
-            await runCommand('npm install husky --save-dev');
-            await runCommand('npm pkg set scripts.prepare="husky install"');
-            await runCommand('npm run prepare');
+            await runCommand('npx husky init');
 
             if (answers.hooksToInstall.includes('pre-push')) {
                 const prePushHookPath = path.join(process.cwd(), '.husky', 'pre-push');
-                const prePushScriptContent = `#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+                const prePushScriptContent = `
 npx --no-install gitsafe push
 `;
                 fs.writeFileSync(prePushHookPath, prePushScriptContent);
@@ -146,8 +143,7 @@ npx --no-install gitsafe push
 
             if (answers.hooksToInstall.includes('commit-msg')) {
                 const commitMsgHookPath = path.join(process.cwd(), '.husky', 'commit-msg');
-                const commitMsgScriptContent = `#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+                const commitMsgScriptContent = `
 npx --no-install gitsafe validate-commit "$1"
 `;
                 fs.writeFileSync(commitMsgHookPath, commitMsgScriptContent);

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "bin": {
     "gitsafe": "./dist/index.js"
