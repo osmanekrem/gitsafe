@@ -7,6 +7,7 @@ import {handleClean} from "./commands/clean";
 import {handleSync} from "./commands/sync";
 import {handleValidateCommit} from "./commands/validate-commit";
 import {handleFix} from "./commands/fix";
+import {handleAdd} from "./commands/add";
 
 const program = new Command();
 
@@ -54,5 +55,11 @@ program
     .command('fix')
     .description('Yaygın Git sorunlarını otomatik olarak teşhis eder ve interaktif çözüm sunar.')
     .action(handleFix);
+
+program
+    .command('add')
+    .description('Değişiklikleri "staging area"ya interaktif ve güvenli bir şekilde ekler.')
+    // .argument('[pathspec]', 'Eklenecek dosya veya klasör yolu', '.') // Gelecekte eklenebilir
+    .action(handleAdd);
 
 program.parse(process.argv);

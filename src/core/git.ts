@@ -113,3 +113,18 @@ export async function isDetachedHead(): Promise<boolean> {
         return statusOutput.includes('HEAD detached at');
     }
 }
+
+export async function getChangedFiles(): Promise<string[]> {
+    try {
+        const output = await executeGit('status --porcelain');
+        if (!output) {
+            return [];
+        }
+        return output.split('\n')
+            .filter(line => line.trim() !== '')
+            .map(line => line.trim().split(' ').slice(1).join(' '));
+    } catch (e) {
+        console.error('❌ Git durumu alınırken bir hata oluştu.');
+        throw e;
+    }
+}
