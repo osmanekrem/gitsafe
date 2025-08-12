@@ -4,6 +4,7 @@ import {handleCommit} from "./commands/commit";
 import {handlePush} from "./commands/push";
 import {handleBranch} from "./commands/branch";
 import {handleClean} from "./commands/clean";
+import {handleSync} from "./commands/sync";
 
 const program = new Command();
 
@@ -36,5 +37,10 @@ program
     .command('clean')
     .description('Ana branch ile birleştirilmiş lokal branch\'leri interaktif olarak temizler.')
     .action(handleClean);
+
+program
+    .command('sync')
+    .description('Ana depoyu ve tüm submodule\'leri tek komutla güvenli bir şekilde günceller.')
+    .action(handleSync);
 
 program.parse(process.argv);
