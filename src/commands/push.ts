@@ -11,6 +11,40 @@ export async function handlePush() {
             process.exit(1);
         }
 
+        const pushArgs = process.argv.slice(3);
+        const isForcePush = pushArgs.includes('--force') || pushArgs.includes('-f');
+        let finalPushArgs = pushArgs;
+
+        if (isForcePush) {
+            console.warn('\n🚨 TEHLİKELİ İŞLEM TESPİT EDİLDİ: `--force` push 🚨');
+            console.warn('`--force` kullanmak, takım arkadaşlarınızın yaptığı değişiklikleri kalıcı olarak silebilir.');
+
+            const { forceAction } = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'forceAction',
+                    message: 'Bunun yerine çok daha güvenli olan `--force-with-lease` kullanmak ister misiniz?',
+                    choices: [
+                        { name: 'Evet, `--force-with-lease` kullan (Şiddetle Tavsiye Edilir)', value: 'lease' },
+                        { name: 'Hayır, riski anladım ve yine de `--force` ile devam etmek istiyorum', value: 'force' },
+                        { name: 'İşlemi tamamen iptal et', value: 'cancel' }
+                    ]
+                }
+            ]);
+
+            if (forceAction === 'cancel') {
+                console.log('İşlem iptal edildi.');
+                return;
+            }
+
+            if (forceAction === 'lease') {
+                finalPushArgs = pushArgs.map(arg =>
+                    (arg === '--force' || arg === '-f') ? '--force-with-lease' : arg
+                );
+                console.log('✅ Komut `--force-with-lease` kullanacak şekilde güncellendi.');
+            }
+        }
+
         console.log('🔄 gitsafe push kontrolü başlatılıyor...');
         const currentBranch = await getCurrentBranch();
         console.log(`Mevcut branch: ${currentBranch}`);
@@ -59,9 +93,11 @@ export async function handlePush() {
             } else {
                 console.log('İşlem iptal edildi.');
             }
-        } else {
-            console.log('✅ Lokal branch\'iniz güncel. Güvenli push işlemi gerçekleştiriliyor...');
-            const pushArgs = process.argv.slice(3).join(' ');
+            return;
+        }
+
+        const pushCommand = `push ${finalPushArgs.join(' ')}`;
+        console.log(`\n✅ Kontroller tamamlandı. Komut çalıştırılıyor: git ${pushCommand}`);
 
             try {
                 const stdout = await executeGit(`push ${pushArgs}`);
@@ -70,7 +106,7 @@ export async function handlePush() {
                 const gitError = pushError as { stderr?: string };
                 console.error(`\n❌ Git Hatası:\n${gitError.stderr || 'Bilinmeyen bir git hatası.'}`);
             }
-        }
+
     } catch (error) {
         const gitError = error as { stderr?: string };
         console.error(`\n❌ Bir hata oluştu: ${gitError.stderr || 'Bilinmeyen bir git hatası.'}`);
