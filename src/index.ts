@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import {handleInit} from "./commands/init";
 import {handleCommit} from "./commands/commit";
 import {handlePush} from "./commands/push";
+import {handleBranch} from "./commands/branch";
 
 const program = new Command();
 
@@ -24,5 +25,10 @@ program
     .description('Uzak depo ile senkronizasyon kontrolü yaparak güvenli bir şekilde push yapmanızı sağlar.')
     .allowUnknownOption()
     .action(handlePush);
+
+program
+    .command('branch <name>')
+    .description('Yeni bir branch oluştururken isimlendirme standartlarını kontrol eder.')
+    .action(handleBranch);
 
 program.parse(process.argv);
