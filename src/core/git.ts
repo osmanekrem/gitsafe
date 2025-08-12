@@ -1,4 +1,10 @@
 import { exec, ExecException } from 'child_process';
+import path from 'path';
+
+export interface SubmoduleStatus {
+    path: string;
+    newCommit: string;
+}
 
 export function executeGit(command: string): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -60,5 +66,40 @@ export async function getRemoteDefaultBranch(): Promise<string | null> {
         return match ? match[1] : null;
     } catch (e) {
         return null;
+    }
+}
+
+export async function getStagedSubmodules(): Promise<SubmoduleStatus[]> {
+    try {
+        const output = await executeGit('diff --cached --submodule=log');
+        const submodules: SubmoduleStatus[] = [];
+        const lines = output.split('\n');
+
+        for (const line of lines) {
+            if (line.startsWith('Submodule ')) {
+                const parts = line.split(' ');
+                const submodulePath = parts[1].replace(':', '');
+                const commitRange = parts[2];
+                const newCommit = commitRange.split('..')[1];
+                if (newCommit) {
+                    submodules.push({ path: submodulePath, newCommit: newCommit });
+                }
+            }
+        }
+        return submodules;
+    } catch (e) {
+        return [];
+    }
+}
+
+export async function isCommitPushed(submodulePath: string, commitHash: string): Promise<boolean> {
+    try {
+        const originalDir = process.cwd();
+        process.chdir(path.join(originalDir, submodulePath));
+        const output = await executeGit(`branch -r --contains ${commitHash}`);
+        process.chdir(originalDir);
+        return output.length > 0;
+    } catch (e) {
+        return false;
     }
 }

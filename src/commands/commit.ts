@@ -1,6 +1,23 @@
 import inquirer from 'inquirer';
 import { loadConfig } from '../core/config';
-import { executeGit } from '../core/git';
+import {executeGit, getStagedSubmodules, isCommitPushed} from '../core/git';
+import path from "path";
+
+async function pushSubmodule(submodulePath: string): Promise<void> {
+    const originalDir = process.cwd();
+    try {
+        console.log(`\n'${submodulePath}' klasörüne giriliyor...`);
+        process.chdir(path.join(originalDir, submodulePath));
+
+        console.log(`> git push komutu çalıştırılıyor...`);
+        const pushOutput = await executeGit('push');
+        console.log(pushOutput);
+
+    } finally {
+        console.log(`Ana depoya geri dönülüyor...`);
+        process.chdir(originalDir);
+    }
+}
 
 export async function handleCommit() {
     try {
@@ -8,6 +25,41 @@ export async function handleCommit() {
         if (!config) {
             console.error('❌ Hata: .gitsafe.yml bulunamadı. Lütfen önce `gitsafe init` komutunu çalıştırın.');
             process.exit(1);
+        }
+        console.log('🔍 Submodule tutarlılığı kontrol ediliyor...');
+        const stagedSubmodules = await getStagedSubmodules();
+        let submodulesPushed = false;
+
+        for (const sub of stagedSubmodules) {
+            const isPushed = await isCommitPushed(sub.path, sub.newCommit);
+            if (!isPushed) {
+                console.error(`\n❌ DUR! '${sub.path}' submodule'ünde push'lanmamış değişiklikler var.`);
+                console.warn(`Bu commit (${sub.newCommit.substring(0, 7)}) uzak depoda bulunmuyor ve bu durum takım arkadaşlarınızın projesini kıracaktır.`);
+
+                const { action } = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'action',
+                        message: 'Ne yapmak istersiniz?',
+                        choices: [
+                            { name: `'${sub.path}' submodule'ünü şimdi push'la ve commite devam et (Tavsiye Edilir)`, value: 'push' },
+                            { name: 'Commit işlemini tamamen iptal et', value: 'cancel' },
+                        ]
+                    }
+                ]);
+
+                if (action === 'push') {
+                    await pushSubmodule(sub.path);
+                    submodulesPushed = true;
+                } else {
+                    console.log('Commit işlemi iptal edildi.');
+                    process.exit(0);
+                }
+            }
+        }
+
+        if (stagedSubmodules.length > 0 && !submodulesPushed) {
+            console.log('✅ Tüm submodule\'ler güncel.');
         }
 
         console.log('✅ Conventional Commit Sihirbazı');
