@@ -1,0 +1,14 @@
+# gitsafe Configuration File
+# Bu dosya 'gitsafe init' komutu ile otomatik olarak oluşturulmuştur.
+
+# Commit mesajı kuralları
+commitMessage:
+  style: conventional
+
+# Branch isimlendirme kuralları
+branchNaming:
+  rule: warn
+# Korumalı branch'ler
+# 'gitsafe push' komutu bu branch'lere doğrudan push yapılmasını engeller.
+# Bu özelliği aktif etmek için aşağıdaki listeye branch isimleri ekleyebilirsiniz.
+protectedBranches: []
