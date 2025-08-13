@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Command } from "commander";
 import { handleInit } from "./commands/init";
 import { handleCommit } from "./commands/commit";
